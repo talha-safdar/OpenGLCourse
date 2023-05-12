@@ -1,9 +1,131 @@
 #include <stdio.h>
+#include <string.h> // for reproting errors nothing to do with opengl
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 // window dimensions
 const GLint WIDTH = 800, HEIGHT = 600;
+
+// VAO=vertex array object holds mutiple VBOs to defie how to draw
+// VBO=vertex buffer object
+GLuint VAO, VBO, shader;
+
+// Vertex Shader
+static const char* vShader = "																																		\n\
+#version 330																																																				\n\
+																																																																\n\
+layout (location = 0) in vec3 pos;																														\n\
+																																																																\n\
+void main()																																																					\n\
+{																																																															\n\
+				gl_Position = vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);			\n\
+}";
+
+// Fragment Shader
+static const char* fShader = "																																		\n\
+#version 330																																																				\n\
+																																																																\n\
+out vec4 colour;																					 																										\n\
+																																																																\n\
+void main()																																																					\n\
+{																																																															\n\
+				colour = vec4(1.0, 0.0, 0.0, 1.0);																										\n\
+}";
+
+
+void CreateTriangle() 
+{
+				GLfloat vertices[] = {
+								-1.0f, -1.0f, 0.0f,
+								1.0f, -1.0f, 0.0f,
+								0.0f, 1.0f, 0.0f
+				};
+								
+				glGenVertexArrays(1, &VAO); // create VEO: (amount of array, ID of array)
+				glBindVertexArray(VAO); // binding
+				
+								glGenBuffers(1, &VBO);
+								glBindBuffer(GL_ARRAY_BUFFER, VBO);
+												glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // static values won't change
+
+												glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // last arguement from which element to start in the array
+												glEnableVertexAttribArray(0); // location with 0
+
+								glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+				glBindVertexArray(0);
+}
+
+void AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType)
+{
+				GLuint theShader = glCreateShader(shaderType); // create empty shader of specific type
+
+				const GLchar* theCode[1];
+				theCode[0] = shaderCode;
+
+				GLint codeLength[1];
+				codeLength[0] = strlen(shaderCode); // length of the code
+
+				// set up shader soruce code
+				glShaderSource(theShader, 1, theCode, codeLength);
+				glCompileShader(theShader);
+
+				// error check
+				// link/validate the program
+				GLint result = 0; // result of the two functions about to perform
+				GLchar eLog[1024] = { 0 }; // place to log the error
+
+				// still need to check if program linked properly and then validate it is working for the openGL settings
+				glGetShaderiv(theShader, GL_COMPILE_STATUS, &result);
+				if (!result)
+				{
+								glGetShaderInfoLog(theShader, sizeof(eLog), NULL, eLog);
+								printf("Error compiling the '%d' shader: '&s'\n", shaderType, eLog);
+								return;
+				}
+
+				// attach the shader
+				glAttachShader(theProgram, theShader);
+}
+
+void CompileShader()
+{
+				shader = glCreateProgram();
+				if (!shader)
+				{
+								printf("Error creating shader program!\n");
+								// it can be error handled
+								return;
+				}
+
+				AddShader(shader, vShader, GL_VERTEX_SHADER);
+				AddShader(shader, fShader, GL_FRAGMENT_SHADER);
+
+				// link/validate the program
+				GLint result = 0; // result of the two functions about to perform
+				GLchar eLog[1024] = { 0 }; // place to log the error
+
+				glLinkProgram(shader); // create executables on the GPU linkign all the programs together
+				// still need to check if program linked properly and then validate it is working for the openGL settings
+				glGetProgramiv(shader, GL_LINK_STATUS, &result);
+				if (!result)
+				{
+								glGetProgramInfoLog(shader, sizeof(eLog), NULL, eLog);
+								printf("Error linking program: '&s'\n", eLog);
+								return;
+				}
+
+				// validate program
+				glValidateProgram(shader);
+				glGetProgramiv(shader, GL_VALIDATE_STATUS, &result);
+				if (!result)
+				{
+								glGetProgramInfoLog(shader, sizeof(eLog), NULL, eLog);
+								printf("Error validating program: '&s'\n", eLog);
+								return;
+				}
+}
 
 int main()
 {
@@ -58,6 +180,9 @@ int main()
 				// use buffer size because it obtaines the exact inside window size
 				glViewport(0, 0, bufferWidth, bufferHeight);
 
+				CreateTriangle();
+				CompileShader();
+
 				// Loop until window closed
 				while (!glfwWindowShouldClose(mainWindow)) // whe nclicking on X button i the window bar (which window should close)
 				{
@@ -65,8 +190,14 @@ int main()
 								glfwPollEvents(); // check if any event happened (e.g. mosue, keyboard and window moving/resizing)
 
 								// Clear window
-								glClearColor(1.0f, 0.0f, 0.0f, 1.0f); // wipe screen of colours, fresh frame, set colour too
+								glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // wipe screen of colours, fresh frame, set colour too
 								glClear(GL_COLOR_BUFFER_BIT); // each pixel has more information than colour (light, shade)
+
+								glUseProgram(shader);
+												glBindVertexArray(VAO);
+																glDrawArrays(GL_POINTS, 0, 3);
+												glBindVertexArray(0);
+								glUseProgram(0);
 
 								glfwSwapBuffers(mainWindow); // 2 buffers the front is shown the back is hidden, it is cycle
 				}

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h> // for reproting errors nothing to do with opengl
+#include <cmath> // for mathematical operators
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -9,7 +10,13 @@ const GLint WIDTH = 800, HEIGHT = 600;
 
 // VAO=vertex array object holds mutiple VBOs to defie how to draw
 // VBO=vertex buffer object
-GLuint VAO, VBO, shader;
+GLuint VAO, VBO, shader, uniformXMove;
+
+// not using GL datatype
+bool direction = true; // for check direction
+float triOffset = 0.0f; // offset starts from zero and move left or right
+float triMaxOffset = 0.7f; // when hit 0.7 while moving to the right, it will toggle the direction boolean
+float triIncrement = 0.01f; // increment by
 
 // Vertex Shader
 static const char* vShader = "																																		\n\
@@ -17,9 +24,11 @@ static const char* vShader = "																																		\n\
 																																																																\n\
 layout (location = 0) in vec3 pos;																														\n\
 																																																																\n\
+uniform float xMove;																																												\n\
+																																																																\n\
 void main()																																																					\n\
 {																																																															\n\
-				gl_Position = vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);			\n\
+				gl_Position = vec4(0.4 * pos.x + xMove, 0.4 * pos.y, pos.z, 1.0);			\n\
 }";
 
 // Fragment Shader
@@ -125,6 +134,8 @@ void CompileShader()
 								printf("Error validating program: '&s'\n", eLog);
 								return;
 				}
+
+				uniformXMove = glGetUniformLocation(shader, "xMove");
 }
 
 int main()
@@ -189,11 +200,26 @@ int main()
 								// Get + handle user input events
 								glfwPollEvents(); // check if any event happened (e.g. mosue, keyboard and window moving/resizing)
 
+								if (direction)
+								{
+												triOffset += triIncrement;
+								}
+								else
+								{
+												triOffset -= triIncrement;
+								}
+
+								if (abs(triOffset) >= triMaxOffset)
+								{
+												direction = !direction;
+								}
+
 								// Clear window
 								glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // wipe screen of colours, fresh frame, set colour too
 								glClear(GL_COLOR_BUFFER_BIT); // each pixel has more information than colour (light, shade)
 
 								glUseProgram(shader);
+								glUniform1f(uniformXMove, triOffset);
 												glBindVertexArray(VAO);
 																glDrawArrays(GL_TRIANGLES, 0, 3);
 												glBindVertexArray(0);

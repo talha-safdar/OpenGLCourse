@@ -1,16 +1,23 @@
-#include <stdio.h>
+#include <stdio.h>sizeDirection
 #include <string.h> // for reproting errors nothing to do with opengl
 #include <cmath> // for mathematical operators
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp> // for raw values
+
+// glm::mat4 model;
+
 // window dimensions
 const GLint WIDTH = 800, HEIGHT = 600;
+const float roRadians = 3.14159265f / 180.0f; // scale between ranges to convert degree to number
 
 // VAO=vertex array object holds mutiple VBOs to defie how to draw
 // VBO=vertex buffer object
-GLuint VAO, VBO, shader, uniformXMove;
+GLuint VAO, VBO, shader, uniformModel;
 
 // not using GL datatype
 bool direction = true; // for check direction
@@ -18,17 +25,24 @@ float triOffset = 0.0f; // offset starts from zero and move left or right
 float triMaxOffset = 0.7f; // when hit 0.7 while moving to the right, it will toggle the direction boolean
 float triIncrement = 0.01f; // increment by
 
+float curAngle = 0.0f; // for rotating
+
+float sizeDirection = true; // for size
+float curSize = 0.4f; 
+float maxSize = 0.8f;
+float minSize = 0.1f;
+
 // Vertex Shader
 static const char* vShader = "																																		\n\
 #version 330																																																				\n\
 																																																																\n\
 layout (location = 0) in vec3 pos;																														\n\
 																																																																\n\
-uniform float xMove;																																												\n\
+uniform mat4 model;																																												 \n\
 																																																																\n\
 void main()																																																					\n\
 {																																																															\n\
-				gl_Position = vec4(0.4 * pos.x + xMove, 0.4 * pos.y, pos.z, 1.0);			\n\
+				gl_Position = model * vec4(pos, 1.0);			\n\
 }";
 
 // Fragment Shader
@@ -135,7 +149,7 @@ void CompileShader()
 								return;
 				}
 
-				uniformXMove = glGetUniformLocation(shader, "xMove");
+				uniformModel = glGetUniformLocation(shader, "model");
 }
 
 int main()
@@ -214,12 +228,41 @@ int main()
 												direction = !direction;
 								}
 
+								curAngle += 0.7f;
+								if (curAngle >= 300)
+								{
+												curAngle -= 300;
+								}
+
+								if (direction)
+								{
+												curSize += 0.01f;
+								}
+								else
+								{
+												curSize -= 0.01f;
+								}
+
+								if (curSize >= maxSize || curSize <= minSize)
+								{
+												sizeDirection = !sizeDirection;
+								}
+
 								// Clear window
 								glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // wipe screen of colours, fresh frame, set colour too
 								glClear(GL_COLOR_BUFFER_BIT); // each pixel has more information than colour (light, shade)
 
 								glUseProgram(shader);
-								glUniform1f(uniformXMove, triOffset);
+								
+								glm::mat4 model(1.0f);
+								// if do translete first rotate then the model is rotate from the original pivot point hence it creates distortion
+								// because it rotated after being moved away from the pivot point
+								// model = glm::rotate(model, curAngle * roRadians, glm::vec3(0.0f, 0.0f, 1.0f));
+								model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f)); // here can manipulate the matrix of the model
+								model = glm::scale(model, glm::vec3(curSize, 0.4f, 1.0f)); // twice as big
+
+								// glUniform1f(uniformModel, triOffset);
+								glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 												glBindVertexArray(VAO);
 																glDrawArrays(GL_TRIANGLES, 0, 3);
 												glBindVertexArray(0);

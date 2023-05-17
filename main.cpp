@@ -15,9 +15,11 @@
 const GLint WIDTH = 800, HEIGHT = 600;
 const float roRadians = 3.14159265f / 180.0f; // scale between ranges to convert degree to number
 
+// buffers
 // VAO=vertex array object holds mutiple VBOs to defie how to draw
 // VBO=vertex buffer object
-GLuint VAO, VBO, shader, uniformModel;
+// IBO=Index buffer object
+GLuint VAO, VBO, IBO, shader, uniformModel;
 
 // not using GL datatype
 bool direction = true; // for check direction
@@ -65,15 +67,29 @@ void main()																																																					\n\
 
 void CreateTriangle() 
 {
+
+				// for drawing vertices by using vertices[] by indexing them
+				unsigned int indices[] = {
+								0, 3, 1, // 
+								1, 3, 2, // 
+								2, 3, 0,
+								0, 1, 2
+				};
+
 				GLfloat vertices[] = {
 								-1.0f, -1.0f, 0.0f,
+								0.0f, -1.0f, 1.0f,
 								1.0f, -1.0f, 0.0f,
 								0.0f, 1.0f, 0.0f
 				};
 								
 				glGenVertexArrays(1, &VAO); // create VEO: (amount of array, ID of array)
 				glBindVertexArray(VAO); // binding
-				
+
+				glGenBuffers(1, &IBO);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+				glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 								glGenBuffers(1, &VBO);
 								glBindBuffer(GL_ARRAY_BUFFER, VBO);
 												glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // static values won't change
@@ -82,6 +98,7 @@ void CreateTriangle()
 												glEnableVertexAttribArray(0); // location with 0
 
 								glBindBuffer(GL_ARRAY_BUFFER, 0);
+								glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 				glBindVertexArray(0);
 }
@@ -201,11 +218,15 @@ int main()
 
 				if (glewInit() != GLEW_OK) // if GLEW features are false
 				{
-								printf("GLW initialization failed!");
+								// printf("GLW initialization failed!");
+								printf("Error: % s", glewGetErrorString(glewInit()));
 								glfwDestroyWindow(mainWindow); // GLFW remove window
 								glfwTerminate(); // GLFW teriminate process
 								return 1; // return error
 				}
+
+				// depth test is impoartant
+				glEnable(GL_DEPTH_TEST);
 
 				// Setup viewport size (like canvas in JavaFX, the drawable part inside the window)
 				// use buffer size because it obtaines the exact inside window size
@@ -254,23 +275,26 @@ int main()
 												sizeDirection = !sizeDirection;
 								}
 
-								// Clear window
+								// Clear colors in window and depth buffer bit
 								glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // wipe screen of colours, fresh frame, set colour too
-								glClear(GL_COLOR_BUFFER_BIT); // each pixel has more information than colour (light, shade)
+								glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // each pixel has more information than colour (light, shade)
 
 								glUseProgram(shader);
 								
 								glm::mat4 model(1.0f);
 								// if do translete first rotate then the model is rotate from the original pivot point hence it creates distortion
 								// because it rotated after being moved away from the pivot point
-								// model = glm::rotate(model, curAngle * roRadians, glm::vec3(0.0f, 0.0f, 1.0f));
+								model = glm::rotate(model, curAngle * roRadians, glm::vec3(0.0f, 1.0f, 0.0f));
 								// model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f)); // here can manipulate the matrix of the model
 								model = glm::scale(model, glm::vec3(0.4, 0.4f, 1.0f)); // twice as big
 
 								// glUniform1f(uniformModel, triOffset);
 								glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 												glBindVertexArray(VAO);
-																glDrawArrays(GL_TRIANGLES, 0, 3);
+																// glDrawArrays(GL_TRIANGLES, 0, 3);
+																glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+																// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+																glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 												glBindVertexArray(0);
 								glUseProgram(0);
 

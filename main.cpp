@@ -33,27 +33,33 @@ float maxSize = 0.8f;
 float minSize = 0.1f;
 
 // Vertex Shader
+// clamp is used if the number is beyond zero put it between 0 and 1
 static const char* vShader = "																																		\n\
 #version 330																																																				\n\
 																																																																\n\
 layout (location = 0) in vec3 pos;																														\n\
 																																																																\n\
+out vec4 vCol;																																																																\n\
+																																																																\n\
 uniform mat4 model;																																												 \n\
 																																																																\n\
 void main()																																																					\n\
 {																																																															\n\
-				gl_Position = model * vec4(pos, 1.0);			\n\
+				gl_Position = model * vec4(pos, 1.0);																							\n\
+				vCol = vec4(clamp(pos, 0.0f, 1.0f), 1.0f);																		\n\
 }";
 
 // Fragment Shader
 static const char* fShader = "																																		\n\
 #version 330																																																				\n\
 																																																																\n\
+in vec4 vCol;																																																																\n\
+																																																																\n\
 out vec4 colour;																					 																										\n\
 																																																																\n\
 void main()																																																					\n\
 {																																																															\n\
-				colour = vec4(1.0, 0.0, 0.0, 1.0);																										\n\
+				colour = vCol;																																														\n\
 }";
 
 
@@ -234,7 +240,7 @@ int main()
 												curAngle -= 300;
 								}
 
-								if (direction)
+								if (sizeDirection)
 								{
 												curSize += 0.01f;
 								}
@@ -258,8 +264,8 @@ int main()
 								// if do translete first rotate then the model is rotate from the original pivot point hence it creates distortion
 								// because it rotated after being moved away from the pivot point
 								// model = glm::rotate(model, curAngle * roRadians, glm::vec3(0.0f, 0.0f, 1.0f));
-								model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f)); // here can manipulate the matrix of the model
-								model = glm::scale(model, glm::vec3(curSize, 0.4f, 1.0f)); // twice as big
+								// model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f)); // here can manipulate the matrix of the model
+								model = glm::scale(model, glm::vec3(0.4, 0.4f, 1.0f)); // twice as big
 
 								// glUniform1f(uniformModel, triOffset);
 								glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));

@@ -19,7 +19,7 @@ const float roRadians = 3.14159265f / 180.0f; // scale between ranges to convert
 // VAO=vertex array object holds mutiple VBOs to defie how to draw
 // VBO=vertex buffer object
 // IBO=Index buffer object
-GLuint VAO, VBO, IBO, shader, uniformModel;
+GLuint VAO, VBO, IBO, shader, uniformModel, uniformProjection;
 
 // not using GL datatype
 bool direction = true; // for check direction
@@ -36,6 +36,9 @@ float minSize = 0.1f;
 
 // Vertex Shader
 // clamp is used if the number is beyond zero put it between 0 and 1
+// model = model itself in space
+// view = camera relative to everyehting
+// proejction = how the camera trasnelts into what it sees
 static const char* vShader = "																																		\n\
 #version 330																																																				\n\
 																																																																\n\
@@ -44,10 +47,11 @@ layout (location = 0) in vec3 pos;																														\n\
 out vec4 vCol;																																																																\n\
 																																																																\n\
 uniform mat4 model;																																												 \n\
+uniform mat4 projection;																																								\n\
 																																																																\n\
 void main()																																																					\n\
 {																																																															\n\
-				gl_Position = model * vec4(pos, 1.0);																							\n\
+				gl_Position = projection * model * vec4(pos, 1.0);										\n\
 				vCol = vec4(clamp(pos, 0.0f, 1.0f), 1.0f);																		\n\
 }";
 
@@ -173,6 +177,7 @@ void CompileShader()
 				}
 
 				uniformModel = glGetUniformLocation(shader, "model");
+				uniformProjection = glGetUniformLocation(shader, "projection");
 }
 
 int main()
@@ -235,6 +240,8 @@ int main()
 				CreateTriangle();
 				CompileShader();
 
+				glm::mat4 projection = glm::perspective(45.0f, (GLfloat)bufferWidth / (GLfloat)bufferHeight, 0.1f, 100.0f);
+
 				// Loop until window closed
 				while (!glfwWindowShouldClose(mainWindow)) // whe nclicking on X button i the window bar (which window should close)
 				{
@@ -284,12 +291,13 @@ int main()
 								glm::mat4 model(1.0f);
 								// if do translete first rotate then the model is rotate from the original pivot point hence it creates distortion
 								// because it rotated after being moved away from the pivot point
-								model = glm::rotate(model, curAngle * roRadians, glm::vec3(0.0f, 1.0f, 0.0f));
-								// model = glm::translate(model, glm::vec3(triOffset, 0.0f, 0.0f)); // here can manipulate the matrix of the model
+								model = glm::translate(model, glm::vec3(triOffset, 0.0f, -2.5f)); // here can manipulate the matrix of the model
+								// model = glm::rotate(model, curAngle * roRadians, glm::vec3(0.0f, 1.0f, 0.0f));
 								model = glm::scale(model, glm::vec3(0.4, 0.4f, 1.0f)); // twice as big
 
 								// glUniform1f(uniformModel, triOffset);
 								glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+								glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
 												glBindVertexArray(VAO);
 																// glDrawArrays(GL_TRIANGLES, 0, 3);
 																glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);

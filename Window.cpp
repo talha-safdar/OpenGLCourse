@@ -4,11 +4,17 @@ Window::Window()
 {
 				width = 800;
 				height = 600;
+				mouseFirstMoved = false;
 
 				for (size_t i = 0; i < 1024; i++)
 				{
 								keys[i] = 0;
 				}
+
+				xChange = 0.0f;
+				yChange = 0.0f;
+
+				mouseFirstMoved = true;
 }
 
 Window::Window(GLint windowWidth, GLint windowHeight)
@@ -16,14 +22,24 @@ Window::Window(GLint windowWidth, GLint windowHeight)
 				width = windowWidth;
 				height = windowHeight;
 
+				mouseFirstMoved = false;
+
 				for (size_t i = 0; i < 1024; i++)
 				{
 								keys[i] = 0;
 				}
+
+				xChange = 0.0f;
+				yChange = 0.0f;
+
+				mouseFirstMoved = true;
 }
 
 int Window::initialise()
 {
+				xChange = 0.0f;
+				yChange = 0.0f;
+
 				// initialize GLFW
 				if (glfwInit() == false) // if it fails
 				{
@@ -144,12 +160,12 @@ void Window::handleMouse(GLFWwindow* window, double xPos, double yPos)
 				}
 
 				theWindow->xChange = xPos - theWindow->lastX;
-				theWindow->yChange = theWindow->lastY - xPos; // you can switch the positions if inverteed preferred
+				theWindow->yChange =  xPos - theWindow->lastY; // you can switch the positions if inverteed preferred
 
 				theWindow->lastX = xPos;
 				theWindow->lastY = yPos;
 
-				// printf("x:%.6f, y:%.6f\n", theWindow->xChange, theWindow->yChange);
+				printf("x:%.6f, y:%.6f\n", theWindow->xChange, theWindow->yChange);
 }
 
 Window::~Window()

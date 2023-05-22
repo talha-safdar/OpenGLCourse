@@ -1,4 +1,4 @@
-#include <stdio.h>sizeDirection
+#include <stdio.h>
 #include <string.h> // for reproting errors nothing to do with opengl
 #include <cmath> // for mathematical operators
 #include <vector>
@@ -13,12 +13,17 @@
 #include "Window.h"
 #include "Mesh.h"
 #include "Shader.h"
+#include "Camera.h"
 
 const float roRadians = 3.14159265f / 180.0f; // scale between ranges to convert degree to number
 
 Window mainWindow;
 std::vector<Mesh*> meshList;
 std::vector<Shader> shaderList;
+Camera camera;
+
+GLfloat deltaTime = 0.0f;
+GLfloat lastTime = 0.0f;
 
 // buffers
 // VAO=vertex array object holds mutiple VBOs to defie how to draw
@@ -78,14 +83,24 @@ int main()
 				CreateObjects();
 				CreateShaders();
 
-				GLuint uniformProjection = 0, uniformModel = 0;
+				camera = Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 5.0f, 1.0f);
+
+				GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0;
 				glm::mat4 projection = glm::perspective(45.0f, mainWindow.getBufferWidth() / mainWindow.getBufferHeight(), 0.1f, 100.0f);
 
 				// Loop until window closed
 				while (!mainWindow.getShouldClose()) // whe nclicking on X button i the window bar (which window should close)
 				{
+								GLfloat now = glfwGetTime();
+								deltaTime = now - lastTime;
+								lastTime = now;
+
 								// Get + handle user input events
 								glfwPollEvents(); // check if any event happened (e.g. mosue, keyboard and window moving/resizing)
+
+								// check for key presses for camera
+								camera.keyControl(mainWindow.getKeys(), deltaTime);
+								camera.mouseControl(mainWindow.getXChange(), mainWindow.getYChange(), deltaTime);
 
 								// Clear colors in window and depth buffer bit
 								glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // wipe screen of colours, fresh frame, set colour too
@@ -94,7 +109,8 @@ int main()
 								shaderList[0].UseShader();
 								uniformModel = shaderList[0].GetModelLocation();
 								uniformProjection = shaderList[0].GetProjectionLocation();
-																
+								uniformView = shaderList[0].GetViewLocation();
+
 								glm::mat4 model(1.0f);
 								// if do translete first rotate then the model is rotate from the original pivot point hence it creates distortion
 								// because it rotated after being moved away from the pivot point
@@ -104,6 +120,7 @@ int main()
 
 								glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 								glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
+								glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
 								meshList[0]->RenderMesh();
 
 								// for second object

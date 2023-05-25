@@ -37,7 +37,7 @@ private:
 				GLfloat lastX;
 				GLfloat lastY; // last coordinate
 				GLfloat xChange;
-				GLfloat yChange; // calculate the chnange
+				GLfloat yChange; // calculate the change
 				bool mouseFirstMoved; // initialiastion movement
 
 				void createCallbacks();

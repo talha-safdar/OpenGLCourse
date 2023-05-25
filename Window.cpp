@@ -158,9 +158,8 @@ void Window::handleMouse(GLFWwindow* window, double xPos, double yPos)
 								theWindow->lastY = yPos;
 								theWindow->mouseFirstMoved = false;
 				}
-
 				theWindow->xChange = xPos - theWindow->lastX;
-				theWindow->yChange =  xPos - theWindow->lastY; // you can switch the positions if inverteed preferred
+				theWindow->yChange = theWindow->lastY - yPos; // you can switch the positions if inverteed preferred
 
 				theWindow->lastX = xPos;
 				theWindow->lastY = yPos;

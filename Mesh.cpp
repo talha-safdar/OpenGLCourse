@@ -47,21 +47,21 @@ void Mesh::RenderMesh()
 
 void Mesh::ClearMesh()
 {
-				if (IBO = 0)
+				if (IBO == 0)
 				{
 								// delete the bufer of the GPU memory
 								// for more space;
 								glDeleteBuffers(1, &IBO); // improves performance
 								IBO = 0;
 				}
-				if (VBO = 0)
+				if (VBO == 0)
 				{
 								// delete the bufer of the GPU memory
 								// for more space;
 								glDeleteBuffers(1, &VBO); // improves performance
 								VBO = 0;
 				}
-				if (VAO = 0)
+				if (VAO == 0)
 				{
 								// delete the bufer of the GPU memory
 								// for more space;

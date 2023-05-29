@@ -23,10 +23,12 @@ void Mesh::CreateMesh(GLfloat* vertices, unsigned int* indices, unsigned int num
 				glBindBuffer(GL_ARRAY_BUFFER, VBO);
 				glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * numOfVertices, vertices, GL_STATIC_DRAW); // static values won't change
 
-				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 5, 0); // last arguement from which element to start in the array
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 8, 0); // last arguement from which element to start in the array
 				glEnableVertexAttribArray(0); // location with 0
-				glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 5, (void*)sizeof(vertices[0] * 3)); // 0=position 1=texture coordinate
+				glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 8, (void*)sizeof(vertices[0] * 3)); // 0=position 1=texture coordinate
 				glEnableVertexAttribArray(1);
+				glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 8, (void*)(sizeof(vertices[0]) * 5));
+				glEnableVertexAttribArray(2);
 
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
